@@ -16,8 +16,6 @@ Shrink them too slow, and you cannot find an empty spot for the next shape.
 It turns out that the area should follow a pow( i, -c ) sequence.
 
 ## Link to Prototype
-NOTE: If your project lives online you can add one or more links here. Make sure you have a stable version of your project running before linking it.
-
 [Github project with source code](https://github.com/stolk/devart-template/tree/master/project_code "Source Code for this project.")
 
 ## Example Code
@@ -62,7 +60,6 @@ No external libraries are required.
 [Example Link](http://www.google.com "Example Link")
 
 ## Images & Videos
-NOTE: For additional images you can either use a relative link to an image on this repo or an absolute link to an externally hosted image.
 
 ![Example Image](project_images/cover.jpg?raw=true "Example Image")
 
@@ -76,4 +73,3 @@ NOTE: For additional images you can either use a relative link to an image on th
 
 ![Example Image](project_images/sample4.png?raw=true "Example Image")
 
-https://www.youtube.com/watch?v=30yGOxJJ2PQ
