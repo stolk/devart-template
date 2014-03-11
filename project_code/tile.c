@@ -203,7 +203,7 @@ static float stry[8] __attribute__ ((aligned (32)));
 static float strX[8] __attribute__ ((aligned (32)));
 static float strY[8] __attribute__ ((aligned (32)));
 
-#define SHPCNT 3
+#define SHPCNT 4
 static float shpx[SHPCNT][8] __attribute__ ((aligned(32)));
 static float shpy[SHPCNT][8] __attribute__ ((aligned(32)));
 static float shpX[SHPCNT][8] __attribute__ ((aligned(32)));
@@ -214,7 +214,7 @@ static __m256 shpX8[SHPCNT];
 static __m256 shpY8[SHPCNT];
 static float  shparea[SHPCNT];
 
-#define MAXSZ 1024
+#define MAXSZ 3000
 static __m256 dbx[MAXSZ];
 static __m256 dby[MAXSZ];
 static __m256 dbX[MAXSZ];
@@ -289,7 +289,7 @@ float areasize( __m256 x8, __m256 y8, __m256 X8, __m256 Y8 )
 			mis += !rv;
 		}
 	}
-	return hit / (float)(hit+mis);
+	return  4 * hit / (float)(hit+mis);
 }
 
 
@@ -317,17 +317,21 @@ int main( int argc, char* argv[] )
 		const float a0 = i * M_PI / 4;
 		const float a1 = j * M_PI / 4;
 		float r = 0.5f;
-		shpx[0][ i ] = r * cosf( a0 );
-		shpy[0][ i ] = r * sinf( a0 );
-		float r0 = (i&1) ? 0.2f : 0.6f;
-		float r1 = (j&1) ? 0.2f : 0.6f;
-		shpx[1][ i ] = r0 * cosf( a0 );
-		shpy[1][ i ] = r0 * sinf( a0 );
+		shpx[2][ i ] = r * cosf( a0 );
+		shpy[2][ i ] = r * sinf( a0 );
+		float r0 = (i&1) ? 0.3f : 0.5f;
+		float r1 = (j&1) ? 0.3f : 0.5f;
+		shpx[3][ i ] = r0 * cosf( a0 );
+		shpy[3][ i ] = r0 * sinf( a0 );
 	}
-	float arrx[8] = { -0, 0.4, 0.2, 0.2,     0, -0.2, -0.2, -0.4 };
-	float arry[8] = { -0.6, -0.2, -0.2, 0.6,    0.4, 0.6, -0.2, -0.2 };
-	memcpy( shpx[2], arrx, sizeof(arrx) );
-	memcpy( shpy[2], arry, sizeof(arry) );
+	const float sqrx[8] = { -0.5, -0.5, -0.5, 0, 0.5, 0.5, 0.5, 0 };
+	const float sqry[8] = { 0.5, 0, -0.5, -0.5, -0.5, 0, 0.5, 0.5 };
+	memcpy( shpx[0], sqrx, sizeof(sqrx) );
+	memcpy( shpy[0], sqry, sizeof(sqry) );
+	const float arrx[8] = { -0, 0.4, 0.2, 0.2,     0, -0.2, -0.2, -0.4 };
+	const float arry[8] = { -0.6, -0.2, -0.2, 0.6,    0.4, 0.6, -0.2, -0.2 };
+	memcpy( shpx[1], arrx, sizeof(arrx) );
+	memcpy( shpy[1], arry, sizeof(arry) );
 
 	for ( int s=0; s<SHPCNT; ++s )
 	{
@@ -342,7 +346,7 @@ int main( int argc, char* argv[] )
 		shpy8[s] = _mm256_load_ps( shpy[s] );
 		shpX8[s] = _mm256_load_ps( shpX[s] );
 		shpY8[s] = _mm256_load_ps( shpY[s] );
-		shparea[s] = 4 * areasize( shpx8[s], shpy8[s], shpX8[s], shpY8[s] );
+		shparea[s] = areasize( shpx8[s], shpy8[s], shpX8[s], shpY8[s] );
 		fprintf( stderr, "area of shape %d: %f\n", s, shparea[s] );
 	}
 
@@ -373,13 +377,13 @@ int main( int argc, char* argv[] )
 	fprintf( stdout, "<?xml version=\"1.0\"?>\n" );
 	fprintf( stdout, "<svg version=\"1.1\" baseProfile=\"tiny\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg-root\" viewBox=\"0 0 1 1\">\n" );
 
-	const float c = 1.344;
+	const float c = 1.3;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		const int shpnr = 0;
-		//const int shpnr = i&1; //i%SHPCNT;
-		//const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
-		const float scl = sqrtf( powf( 6+i, -c ) );
+		//const int shpnr = 0;
+		const int shpnr = i%SHPCNT;
+		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
+		//const float scl = sqrtf( powf( 6+i, -c ) );
 		fprintf( stderr, "scl %f\n", scl );
 		int valid = 0;
 		int trials = 0;
@@ -412,9 +416,10 @@ int main( int argc, char* argv[] )
 				dbY[dbsz] = Y8;
 				dbsz++;
 				fprintf( stderr, "Found placement nr %d (shape %d) in %d trials.\n", i, shpnr, trials );
-				const float h = atan2f( yo-0.5, xo-0.5 ) * 180.0f / M_PI;
-				const float s = 0.3 + 0.4 * xo;
-				const float v = 0.3 + 0.4 * yo;
+				const float radius = sqrtf( ( yo-0.5 ) * ( yo-0.5 ) + ( xo-0.5 ) * ( xo-0.5 ) );
+				const float h = shpnr*22 + 300;
+				const float s = 0.8 - 1.2 * radius;
+				const float v = 0.9 - 1.2 * radius;
 				float r,g,b;
 				hsv2rgb( h, s, v, &r, &g, &b );
 				static float x[8] __attribute__ ((aligned (32)));
