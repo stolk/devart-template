@@ -61,7 +61,7 @@ No external libraries are required.
 
 ## Images & Videos
 
-![Example Image](project_images/cover.jpg?raw=true "Example Image")
+![Example Image](project_images/sample5.jpg?raw=true "Hue per shape, Saturation and Value fall off from centre.")
 
 ![Example Image](project_images/sample0.png?raw=true "Example Image")
 
@@ -71,5 +71,5 @@ No external libraries are required.
 
 ![Example Image](project_images/sample3.png?raw=true "Example Image")
 
-![Example Image](project_images/sample4.png?raw=true "Example Image")
+![Example Image](project_images/sample4.png?raw=true "Hue changes in radial direction. S/V change linearly.")
 
