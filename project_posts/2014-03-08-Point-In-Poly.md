@@ -1,4 +1,4 @@
-= Point in Poly problem.
+# Point in Poly problem.
 
 To efficiently determine whether a point lies in a polygon, two approaches are possible.
 - Counting ray intersections.
