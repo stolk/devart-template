@@ -21,4 +21,4 @@ This uses a single convex shape, with a fixed hue.
 Value and saturation fall off from the centre.
 The packing constant c=1.3 was used.
 
-![Example Image](../project_images/sample6.jpg?raw=true "c=1.3")
+![Example Image](../project_images/sample6.png?raw=true "c=1.3")
