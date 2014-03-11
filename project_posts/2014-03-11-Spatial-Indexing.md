@@ -13,3 +13,12 @@ If the bounding sphere of the shape is r, with r much smaller than the cell size
 This way, we only have to test a single cell when attempting to place a new shape.
 
 A more complex spatial subdivision scheme would be recursive like the quad tree approach.
+
+# More samples
+
+I created another sample image.
+This uses a single convex shape, with a fixed hue.
+Value and saturation fall off from the centre.
+The packing constant c=1.3 was used.
+
+![Example Image](../project_images/sample6.jpg?raw=true "c=1.3")
