@@ -13,7 +13,9 @@ Randomly tiling a bounded plane with an infinite number of non overlapping objec
 To avoid running out of space one has to shrink each additional object.
 But how much to shrink them? Shrink too fast, and the space will look empty.
 Shrink them too slow, and you cannot find an empty spot for the next shape.
-It turns out that the area should follow a pow( i, -c ) sequence.
+It turns out that the area should follow a pow( i, -c ) sequence[^footnote1].
+
+[^footnote1]: i is the iteration number, and c is a tuned constant larger than 1 and lower than 1.5.
 
 ## Link to Prototype
 [Github project with source code](https://github.com/stolk/devart-template/tree/master/project_code "Source Code for this project.")
@@ -57,19 +59,20 @@ int winding_number_8( float px, float py, __m256 vx, __m256 vy, __m256 wx, __m25
 ## Links to External Libraries
 No external libraries are required.
 
-[Example Link](http://www.google.com "Example Link")
+You can use any SVG enabled browser to view the output from the executable compiled with clang.
+[SVG Support](http://caniuse.com/svg "SVG Support")
 
 ## Images & Videos
 
-![Example Image](project_images/sample5.jpg?raw=true "Hue per shape, Saturation and Value fall off from centre.")
+![Example Image](project_images/sample5.png?raw=true "Hue per shape, Saturation and Value fall off from centre.")
 
-![Example Image](project_images/sample0.png?raw=true "Example Image")
+![Example Image](project_images/sample0.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
 
-![Example Image](project_images/sample1.png?raw=true "Example Image")
+![Example Image](project_images/sample1.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
 
-![Example Image](project_images/sample2.png?raw=true "Example Image")
+![Example Image](project_images/sample2.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
 
-![Example Image](project_images/sample3.png?raw=true "Example Image")
+![Example Image](project_images/sample3.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
 
-![Example Image](project_images/sample4.png?raw=true "Hue changes in radial direction. S/V change linearly.")
+![Example Image](project_images/sample4.png?raw=true "Hue changes in radial direction. S/V change linearly. (c=1.278)")
 
