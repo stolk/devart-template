@@ -11,6 +11,8 @@
         ]
     },
     "themes": [
-        "insert themes"
+        "infinity",
+	"space",
+	"shapes"
     ]
 }
