@@ -203,7 +203,7 @@ static float stry[8] __attribute__ ((aligned (32)));
 static float strX[8] __attribute__ ((aligned (32)));
 static float strY[8] __attribute__ ((aligned (32)));
 
-#define SHPCNT 4
+#define SHPCNT 6
 static float shpx[SHPCNT][8] __attribute__ ((aligned(32)));
 static float shpy[SHPCNT][8] __attribute__ ((aligned(32)));
 static float shpX[SHPCNT][8] __attribute__ ((aligned(32)));
@@ -317,12 +317,12 @@ int main( int argc, char* argv[] )
 		const float a0 = i * M_PI / 4;
 		const float a1 = j * M_PI / 4;
 		float r = 0.5f;
-		shpx[2][ i ] = r * cosf( a0 );
-		shpy[2][ i ] = r * sinf( a0 );
+		shpx[4][ i ] = r * cosf( a0 );
+		shpy[4][ i ] = r * sinf( a0 );
 		float r0 = (i&1) ? 0.3f : 0.5f;
 		float r1 = (j&1) ? 0.3f : 0.5f;
-		shpx[3][ i ] = r0 * cosf( a0 );
-		shpy[3][ i ] = r0 * sinf( a0 );
+		shpx[5][ i ] = r0 * cosf( a0 );
+		shpy[5][ i ] = r0 * sinf( a0 );
 	}
 	const float sqrx[8] = { -0.5, -0.5, -0.5, 0, 0.5, 0.5, 0.5, 0 };
 	const float sqry[8] = { 0.5, 0, -0.5, -0.5, -0.5, 0, 0.5, 0.5 };
@@ -332,6 +332,14 @@ int main( int argc, char* argv[] )
 	const float arry[8] = { -0.6, -0.2, -0.2, 0.6,    0.4, 0.6, -0.2, -0.2 };
 	memcpy( shpx[1], arrx, sizeof(arrx) );
 	memcpy( shpy[1], arry, sizeof(arry) );
+	const float utnx[8] = { -0.1, -0.2, -0.2, 0.2,    0.2, 0.1, 0.1, -0.1 };
+	const float utny[8] = { 0.3, 0.3, -0.3, -0.3,     0.3, 0.3, -0.2, -0.2 };
+	memcpy( shpx[2], utnx, sizeof(utnx) );
+	memcpy( shpy[2], utny, sizeof(utny) );
+	const float jtnx[8] = { -0.1, -0.3, -0.3, -0.1,   0.3, 0.3, 0.1, 0.1 };
+	const float jtny[8] = { -0.1, -0.1, -0.3, -0.3,   0.1, 0.3, 0.3, 0.1 };
+	memcpy( shpx[3], jtnx, sizeof(jtnx) );
+	memcpy( shpy[3], jtny, sizeof(jtny) );
 
 	for ( int s=0; s<SHPCNT; ++s )
 	{
@@ -380,8 +388,8 @@ int main( int argc, char* argv[] )
 	const float c = 1.3;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		//const int shpnr = 0;
-		const int shpnr = i%SHPCNT;
+		const int shpnr = 3;
+		//const int shpnr = i%SHPCNT;
 		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
 		//const float scl = sqrtf( powf( 6+i, -c ) );
 		fprintf( stderr, "scl %f\n", scl );
