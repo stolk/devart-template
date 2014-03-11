@@ -1,12 +1,15 @@
 # Project Title
-Insert the name of your project
+Random Space Filling
 
 ## Authors
-- Insert main author name, surname, github account
-- Insert other author(s) name, surname, github account (one per list element)
+- Bram Stolk, (stolk)
 
 ## Description
-Insert a description containing about 100 to 150 words, including your motivation and the meaning behind your idea and execution. The Judges will be keen to know how your idea pushes the boundaries of code and technology. 
+Randomly filling a bounded plane with an infinite number of non overlapping objects is an interesting premise.
+To avoid running out of space one has to shrink each additional object.
+But how much to shrink them? Shrink too fast, and the space will look empty.
+Shrink them too slow, and you cannot find an empty spot for the next shape.
+It turns out that the area should follow a pow( i, -c ) sequence.
 
 ## Link to Prototype
 NOTE: If your project lives online you can add one or more links here. Make sure you have a stable version of your project running before linking it.
@@ -21,7 +24,7 @@ function test() {
 }
 ```
 ## Links to External Libraries
- NOTE: You can also use this space to link to external libraries or Github repositories you used on your project.
+No external libraries are required.
 
 [Example Link](http://www.google.com "Example Link")
 
