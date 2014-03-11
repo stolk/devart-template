@@ -13,9 +13,9 @@ Randomly tiling a bounded plane with an infinite number of non overlapping objec
 To avoid running out of space one has to shrink each additional object.
 But how much to shrink them? Shrink too fast, and the space will look empty.
 Shrink them too slow, and you cannot find an empty spot for the next shape.
-It turns out that the area should follow a pow( i, -c ) sequence[^footnote1].
+It turns out that the area should follow a pow( i, -c ) sequence.
 
-[^footnote1]: i is the iteration number, and c is a tuned constant larger than 1 and lower than 1.5.
+<I>i is the iteration number, and c is a tuned constant larger than 1 and lower than 1.5.</I>
 
 ## Link to Prototype
 [Github project with source code](https://github.com/stolk/devart-template/tree/master/project_code "Source Code for this project.")
