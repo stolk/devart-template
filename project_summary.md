@@ -10,7 +10,7 @@ Random Space Filling Tiling
 
 ## Description
 Randomly tiling a bounded plane with an infinite number of non overlapping shapes is an interesting premise.
-To avoid running out of space one has to shrink each additional shapes.
+To avoid running out of space one has to shrink each additional shape.
 But how much to shrink them? Shrink too fast, and the space will look empty.
 Shrink them too slow, and you cannot find an empty spot for the next shape.
 It turns out that the area should follow a pow( i, -c ) sequence.
