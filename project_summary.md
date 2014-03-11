@@ -1,11 +1,11 @@
 # Project Title
-Random Space Filling
+Random Space Filling Tiling
 
 ## Authors
 - Bram Stolk, (stolk)
 
 ## Description
-Randomly filling a bounded plane with an infinite number of non overlapping objects is an interesting premise.
+Randomly tiling a bounded plane with an infinite number of non overlapping objects is an interesting premise.
 To avoid running out of space one has to shrink each additional object.
 But how much to shrink them? Shrink too fast, and the space will look empty.
 Shrink them too slow, and you cannot find an empty spot for the next shape.
@@ -17,7 +17,8 @@ NOTE: If your project lives online you can add one or more links here. Make sure
 [Example Link](http://www.google.com "Example Link")
 
 ## Example Code
-NOTE: Wrap your code blocks or any code citation by using ``` like the example below.
+This piece of code shows how AVX allows you to consider eight edges w.r.t a point, in a single go.
+Another nice property of the code is that there is no branching, no looping.
 ```
 // 8-way SIMD calculation of winding number of a point versus a polygon size 8.
 int winding_number_8( float px, float py, __m256 vx, __m256 vy, __m256 wx, __m256 wy )
