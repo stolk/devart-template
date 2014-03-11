@@ -415,7 +415,7 @@ int main( int argc, char* argv[] )
 				dbX[dbsz] = X8;
 				dbY[dbsz] = Y8;
 				dbsz++;
-				fprintf( stderr, "Found placement nr %d (shape %d) in %d trials.\n", i, shpnr, trials );
+				fprintf( stderr, "Found placement nr %d (shape %d) in %d trials (trials/shapecount=%f).\n", i, shpnr, trials, trials / (float)dbsz );
 				const float radius = sqrtf( ( yo-0.5 ) * ( yo-0.5 ) + ( xo-0.5 ) * ( xo-0.5 ) );
 				const float h = shpnr*22 + 300;
 				const float s = 0.8 - 1.2 * radius;
