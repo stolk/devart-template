@@ -14,7 +14,7 @@ It turns out that the area should follow a pow( i, -c ) sequence.
 ## Link to Prototype
 NOTE: If your project lives online you can add one or more links here. Make sure you have a stable version of your project running before linking it.
 
-[Example Link](http://www.google.com "Example Link")
+[Github project with source code](https://github.com/stolk/devart-template/tree/master/project_code "Source Code for this project.")
 
 ## Example Code
 This piece of code shows how AVX allows you to consider eight edges w.r.t a point, in a single go.
