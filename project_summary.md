@@ -9,8 +9,8 @@ Random Space Filling Tiling
 - Concept was described by Paul Bourke (http://paulbourke.net/texture_colour/randomtile/)
 
 ## Description
-Randomly tiling a bounded plane with an infinite number of non overlapping objects is an interesting premise.
-To avoid running out of space one has to shrink each additional object.
+Randomly tiling a bounded plane with an infinite number of non overlapping shapes is an interesting premise.
+To avoid running out of space one has to shrink each additional shapes.
 But how much to shrink them? Shrink too fast, and the space will look empty.
 Shrink them too slow, and you cannot find an empty spot for the next shape.
 It turns out that the area should follow a pow( i, -c ) sequence.
@@ -54,6 +54,11 @@ int winding_number_8( float px, float py, __m256 vx, __m256 vy, __m256 wx, __m25
         return additionvals[0] + additionvals[1] + additionvals[2] + additionvals[3] +
                additionvals[4] + additionvals[5] + additionvals[6] + additionvals[7];
 }
+
+Also, I implemented an 8-Way SIMD algorithm to calculate edge intersections.
+A single edge is tested against 8 others in a single pass, no branching.
+
+By only using 8 sided polygon shapes (either convex or concave) the overlap test becomes very efficient thanks to the parallel AVX instructions.
 
 ```
 ## Links to External Libraries
