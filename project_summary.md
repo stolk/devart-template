@@ -4,6 +4,10 @@ Random Space Filling Tiling
 ## Authors
 - Bram Stolk, (stolk)
 
+## Acknowledgements
+- Concept was pioneered by John Shier (http://www.john-art.com/)
+- Concept was described by Paul Bourke (http://paulbourke.net/texture_colour/randomtile/)
+
 ## Description
 Randomly tiling a bounded plane with an infinite number of non overlapping objects is an interesting premise.
 To avoid running out of space one has to shrink each additional object.
