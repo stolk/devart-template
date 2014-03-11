@@ -1,13 +1,13 @@
 {
     "technologies": {
         "apis": [
-            "insert apis"
+            "C"
         ],
         "platforms": [
-            "insert platforms"
+            "Linux"
         ],
         "toolkits": [
-            "insert toolkits"
+            "SVG"
         ]
     },
     "themes": [
