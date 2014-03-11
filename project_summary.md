@@ -54,13 +54,13 @@ int winding_number_8( float px, float py, __m256 vx, __m256 vy, __m256 wx, __m25
         return additionvals[0] + additionvals[1] + additionvals[2] + additionvals[3] +
                additionvals[4] + additionvals[5] + additionvals[6] + additionvals[7];
 }
+```
 
 Also, I implemented an 8-Way SIMD algorithm to calculate edge intersections.
 A single edge is tested against 8 others in a single pass, no branching.
 
 By only using 8 sided polygon shapes (either convex or concave) the overlap test becomes very efficient thanks to the parallel AVX instructions.
 
-```
 ## Links to External Libraries
 No external libraries are required.
 
