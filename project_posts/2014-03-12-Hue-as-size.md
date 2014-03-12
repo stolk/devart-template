@@ -8,7 +8,7 @@ I think this is because it allows you to focus the view of the beholder.
 Maybe I should experiment by moving this 'hue' focus away from centre-image?
 I use a c=1.284 packing value.
 
-![Example Image](../project_images/sample8.png?raw=true "c=1.3")
+![Example Image](../project_images/sample8_sm.png "c=1.3")
 
 # Performance
 
