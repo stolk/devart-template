@@ -3,6 +3,6 @@ run: tile
 	chromium-browser out.svg
 
 tile: tile.c hsv.h prt.h
-	clang -O3 -mavx tile.c -o tile -lm
+	clang -g -O3 -mavx tile.c -o tile -lm
 
 

@@ -8,6 +8,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "hsv.h"	// for colour space conversions.
 #include "prt.h"	// for printing __m256 and __m256i values to stderr.
@@ -214,15 +215,102 @@ static __m256 shpX8[SHPCNT];
 static __m256 shpY8[SHPCNT];
 static float  shparea[SHPCNT];
 
-#define MAXSZ 3000
-static __m256 dbx[MAXSZ];
-static __m256 dby[MAXSZ];
-static __m256 dbX[MAXSZ];
-static __m256 dbY[MAXSZ];
-static int dbsz=0;
+#define MAXSZ 1600
+// db for large polies
+static __m256 ldbx[MAXSZ];
+static __m256 ldby[MAXSZ];
+static __m256 ldbX[MAXSZ];
+static __m256 ldbY[MAXSZ];
+static int ldbsz=0;
+// db for small polies (which we bin in grid buckets for fast spatial lookup.)
+static __m256 sdbx[MAXSZ];
+static __m256 sdby[MAXSZ];
+static __m256 sdbX[MAXSZ];
+static __m256 sdbY[MAXSZ];
+static int sdbsz=0;
+
+//Spatial indexing
+#define GRIDRES 8
+#define MAXINCELL MAXSZ
+#define OVERLAP 0.4
+#define CRITICALSCALE (OVERLAP/GRIDRES)
+static int buckets[GRIDRES][GRIDRES][MAXINCELL];
+static int bucketsizes[GRIDRES][GRIDRES];
 
 
-static int valid_placement( __m256 x8, __m256 y8, __m256 X8, __m256 Y8 )
+static void add_to_bucket( int x, int y, int idx )
+{
+	if ( x>=0 && x<GRIDRES && y>=0 && y<GRIDRES )
+		buckets[ x ][ y ][ bucketsizes[ x ][ y ]++ ] = idx;
+}
+
+
+// Bin a small polygon wih index 'idx' to one and possibly 1/2/3 neighbours.
+static void add_to_buckets( float xo, float yo, int idx )
+{
+	const int gx = floorf( GRIDRES * xo );
+	const int gy = floorf( GRIDRES * yo );
+	const float dx = ( GRIDRES * xo ) - gx;
+	const float dy = ( GRIDRES * yo ) - gy;
+	add_to_bucket( gx, gy, idx );
+
+	const int addl = dx < OVERLAP;
+	const int addr = dx > (1.0f - OVERLAP);
+	const int addd = dy < OVERLAP;
+	const int addu = dy > (1.0f - OVERLAP);
+
+	if ( addl && addd )
+	{
+		add_to_bucket( gx-1, gy, idx );
+		add_to_bucket( gx, gy-1, idx );
+		add_to_bucket( gx-1, gy-1, idx );
+		return;
+	}
+	if ( addl && addu )
+	{
+		add_to_bucket( gx-1, gy, idx );
+		add_to_bucket( gx, gy+1, idx );
+		add_to_bucket( gx-1, gy+1, idx );
+		return;
+	}
+	if ( addr && addd )
+	{
+		add_to_bucket( gx+1, gy, idx );
+		add_to_bucket( gx, gy-1, idx );
+		add_to_bucket( gx+1, gy-1, idx );
+		return;
+	}
+	if ( addr && addu )
+	{
+		add_to_bucket( gx+1, gy, idx );
+		add_to_bucket( gx, gy+1, idx );
+		add_to_bucket( gx+1, gy+1, idx );
+		return;
+	}
+	if ( addl )
+	{
+		add_to_bucket( gx-1, gy, idx );
+		return;
+	}
+	if ( addr )
+	{
+		add_to_bucket( gx+1, gy, idx );
+		return;
+	}
+	if ( addd )
+	{
+		add_to_bucket( gx, gy-1, idx );
+		return;
+	}
+	if ( addu )
+	{
+		add_to_bucket( gx, gy+1, idx );
+		return;
+	}
+}
+
+
+static int valid_placement( __m256 x8, __m256 y8, __m256 X8, __m256 Y8, float xo, float yo )
 {
 	static float x[8] __attribute__ ((aligned (32)));
 	static float y[8] __attribute__ ((aligned (32)));
@@ -234,43 +322,58 @@ static int valid_placement( __m256 x8, __m256 y8, __m256 X8, __m256 Y8 )
 	_mm256_store_ps( X, X8 );
 	_mm256_store_ps( Y, Y8 );
 
-	// consider all currently placed polygons.
-	for ( int i=0; i<dbsz; ++i )
+	// consider all currently placed large polygons.
+	for ( int i=0; i<ldbsz; ++i )
 	{
 		// any of the points inside a placed polygon? If so, invalid placement.
 		for ( int j=0; j<8; ++j )
 		{
-			const int pt_inside = winding_number_8( x[j], y[j], dbx[i], dby[i], dbX[i], dbY[i] );
+			const int pt_inside = winding_number_8( x[j], y[j], ldbx[i], ldby[i], ldbX[i], ldbY[i] );
 			if ( pt_inside ) return 0;
 		}
 		// any of the edges crosses a placed polygon? If so, invalid placement.
-		int ei0=0, ei1=0;
-
-		ei0 = edges_intersect( x8, y8, X8, Y8, dbx[i], dby[i], dbX[i], dbY[i] );
+		int ei0 = edges_intersect( x8, y8, X8, Y8, ldbx[i], ldby[i], ldbX[i], ldbY[i] );
 		if ( ei0 ) return 0;
+	}
+
 #if 0
-		// scalar version that we can compare against.
-		float p[8] __attribute__ ((aligned (32)));
-		float q[8] __attribute__ ((aligned (32)));
-		float r[8] __attribute__ ((aligned (32)));
-		float s[8] __attribute__ ((aligned (32)));
-		_mm256_store_ps( p, dbx[i] );
-		_mm256_store_ps( q, dby[i] );
-		_mm256_store_ps( r, dbX[i] );
-		_mm256_store_ps( s, dbY[i] );
+	// consider all currently placed small polygons.
+	for ( int i=0; i<sdbsz; ++i )
+	{
+		// any of the points inside a placed polygon? If so, invalid placement.
 		for ( int j=0; j<8; ++j )
 		{
-			//printf( "j=%d\n", j);
-			for ( int k=0; k<8; ++k )
-			{
-				int isec = edge_vs_edge( x8[ j ], y8[ j ], X8[ j ], Y8[ j ], p[ k ], q[ k ], r[ k ], s[ k ] );
-				ei1 = ei1 || isec;
-				if ( ei1 ) return 0;
-			}
+			const int pt_inside = winding_number_8( x[j], y[j], sdbx[i], sdby[i], sdbX[i], sdbY[i] );
+			if ( pt_inside ) return 0;
 		}
-		//if ( ei1 != ei0 ) fprintf( stderr, "DIFFERENCE BETWEEN SCALAR / VECTOR RESULT." );
-		if ( ei1 ) return 0;
+		// any of the edges crosses a placed polygon? If so, invalid placement.
+		int ei0 = edges_intersect( x8, y8, X8, Y8, sdbx[i], sdby[i], sdbX[i], sdbY[i] );
+		if ( ei0 ) return 0;
+	}
+	return 1;
 #endif
+
+	// consider all small polygons that are in the same grid cell
+	int gx = floorf( GRIDRES * xo );
+	int gy = floorf( GRIDRES * yo );
+	gx = gx >= GRIDRES ? GRIDRES-1 : gx;
+	gy = gy >= GRIDRES ? GRIDRES-1 : gy;
+	assert( gx >= 0 );
+	assert( gy >= 0 );
+	const int cnt = bucketsizes[gx][gy];
+	for ( int k=0; k<cnt; ++k )
+	{
+		const int i = buckets[gx][gy][k];
+		assert( i < MAXSZ );
+		// any of the points inside a placed polygon? If so, invalid placement.
+		for ( int j=0; j<8; ++j )
+		{
+			const int pt_inside = winding_number_8( x[j], y[j], sdbx[i], sdby[i], sdbX[i], sdbY[i] );
+			if ( pt_inside ) return 0;
+		}
+		// any of the edges crosses a placed polygon? If so, invalid placement.
+		int ei0 = edges_intersect( x8, y8, X8, Y8, sdbx[i], sdby[i], sdbX[i], sdbY[i] );
+		if ( ei0 ) return 0;
 	}
 	return 1;
 }
@@ -295,12 +398,12 @@ float areasize( __m256 x8, __m256 y8, __m256 X8, __m256 Y8 )
 
 void rotate_shape( float angle, __m256* x, __m256* y, __m256* X, __m256* Y )
 {
-	const __m256 c = _mm256_set1_ps( cosf( angle ) );
-	const __m256 s = _mm256_set1_ps( sinf( angle ) );
-	const __m256 newx = _mm256_sub_ps( _mm256_mul_ps( c, *x ), _mm256_mul_ps( s, *y ) );
-	const __m256 newy = _mm256_add_ps( _mm256_mul_ps( s, *x ), _mm256_mul_ps( c, *y ) );
-	const __m256 newX = _mm256_sub_ps( _mm256_mul_ps( c, *X ), _mm256_mul_ps( s, *Y ) );
-	const __m256 newY = _mm256_add_ps( _mm256_mul_ps( s, *X ), _mm256_mul_ps( c, *Y ) );
+	const __m256 co = _mm256_set1_ps( cosf( angle ) );
+	const __m256 si = _mm256_set1_ps( sinf( angle ) );
+	const __m256 newx = _mm256_sub_ps( _mm256_mul_ps( co, *x ), _mm256_mul_ps( si, *y ) );
+	const __m256 newy = _mm256_add_ps( _mm256_mul_ps( si, *x ), _mm256_mul_ps( co, *y ) );
+	const __m256 newX = _mm256_sub_ps( _mm256_mul_ps( co, *X ), _mm256_mul_ps( si, *Y ) );
+	const __m256 newY = _mm256_add_ps( _mm256_mul_ps( si, *X ), _mm256_mul_ps( co, *Y ) );
 	*x = newx;
 	*y = newy;
 	*X = newX;
@@ -358,6 +461,11 @@ int main( int argc, char* argv[] )
 		fprintf( stderr, "area of shape %d: %f\n", s, shparea[s] );
 	}
 
+	// init grid
+	for ( int xx=0; xx<GRIDRES; ++xx )
+		for ( int yy=0; yy<GRIDRES; ++yy )
+			bucketsizes[xx][yy]=0;
+
 #if 0
 	for ( int y=-20; y<=20; ++y )
 	{
@@ -391,7 +499,6 @@ int main( int argc, char* argv[] )
 		//const int shpnr = 3;
 		const int shpnr = i%SHPCNT;
 		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
-		//const float scl = sqrtf( powf( 6+i, -c ) );
 		fprintf( stderr, "scl %f\n", scl );
 		int valid = 0;
 		int trials = 0;
@@ -414,16 +521,30 @@ int main( int argc, char* argv[] )
 			y8 = _mm256_add_ps( y8, yo8 );
 			X8 = _mm256_add_ps( X8, xo8 );
 			Y8 = _mm256_add_ps( Y8, yo8 );
-			valid = valid_placement( x8, y8, X8, Y8 );
+			valid = valid_placement( x8, y8, X8, Y8, xo, yo );
 			trials++;
 			if ( valid )
 			{
-				dbx[dbsz] = x8;
-				dby[dbsz] = y8;
-				dbX[dbsz] = X8;
-				dbY[dbsz] = Y8;
-				dbsz++;
-				fprintf( stderr, "Found placement nr %d (shape %d) in %d trials (trials/shapecount=%f).\n", i, shpnr, trials, trials / (float)dbsz );
+				// add to grid buckets
+				if ( scl >= CRITICALSCALE )
+				{
+					// add to db
+					ldbx[ldbsz] = x8;
+					ldby[ldbsz] = y8;
+					ldbX[ldbsz] = X8;
+					ldbY[ldbsz] = Y8;
+					ldbsz++;
+				}
+				else
+				{
+					sdbx[sdbsz] = x8;
+					sdby[sdbsz] = y8;
+					sdbX[sdbsz] = X8;
+					sdbY[sdbsz] = Y8;
+					add_to_buckets( xo, yo, sdbsz );
+					sdbsz++;
+				}
+				fprintf( stderr, "Found placement nr %d (shape %d) in %d trials (trials/shapecount=%f).\n", i, shpnr, trials, trials / (float)(sdbsz+ldbsz) );
 				const float radius = sqrtf( ( yo-0.5 ) * ( yo-0.5 ) + ( xo-0.5 ) * ( xo-0.5 ) );
 				const float h = 150 + shpnr*25.0f;
 				const float s = 0.8 - 1.2 * radius;
@@ -450,6 +571,19 @@ int main( int argc, char* argv[] )
 				fflush(stdout);
 			}
 		} while ( !valid );
+	}
+
+	for ( int y=1; y<GRIDRES; y++ )
+	{
+		float yc = y / (float) GRIDRES;
+		fprintf( stdout, "<path d=\"M %f %f L %f %f\" stroke=\"blue\" stroke-width=\"0.001\" />\n",
+			0.0, yc, 1.0, yc );
+	}
+	for ( int x=1; x<GRIDRES; x++ )
+	{
+		float xc = x / (float) GRIDRES;
+		fprintf( stdout, "<path d=\"M %f %f L %f %f\" stroke=\"blue\" stroke-width=\"0.001\" />\n",
+			xc, 0.0, xc, 1.0 );
 	}
 	fprintf( stdout, "</svg>\n" );
 }
