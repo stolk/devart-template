@@ -385,11 +385,11 @@ int main( int argc, char* argv[] )
 	fprintf( stdout, "<?xml version=\"1.0\"?>\n" );
 	fprintf( stdout, "<svg version=\"1.1\" baseProfile=\"tiny\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg-root\" viewBox=\"0 0 1 1\">\n" );
 
-	const float c = 1.3;
+	const float c = 1.30;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		const int shpnr = 3;
-		//const int shpnr = i%SHPCNT;
+		//const int shpnr = 3;
+		const int shpnr = i%SHPCNT;
 		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
 		//const float scl = sqrtf( powf( 6+i, -c ) );
 		fprintf( stderr, "scl %f\n", scl );
@@ -425,7 +425,7 @@ int main( int argc, char* argv[] )
 				dbsz++;
 				fprintf( stderr, "Found placement nr %d (shape %d) in %d trials (trials/shapecount=%f).\n", i, shpnr, trials, trials / (float)dbsz );
 				const float radius = sqrtf( ( yo-0.5 ) * ( yo-0.5 ) + ( xo-0.5 ) * ( xo-0.5 ) );
-				const float h = shpnr*22 + 300;
+				const float h = 150 + shpnr*25.0f;
 				const float s = 0.8 - 1.2 * radius;
 				const float v = 0.9 - 1.2 * radius;
 				float r,g,b;
