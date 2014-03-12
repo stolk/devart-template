@@ -418,6 +418,7 @@ void rotate_shape( float angle, __m256* x, __m256* y, __m256* X, __m256* Y )
 
 int main( int argc, char* argv[] )
 {
+	srand(23);
 	// init shapes
 	for ( int i=0; i<8; ++i )
 	{
