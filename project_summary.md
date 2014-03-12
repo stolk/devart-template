@@ -69,15 +69,11 @@ You can use any SVG enabled browser to view the output from the executable compi
 
 ## Images & Videos
 
-![Example Image](project_images/sample5.png?raw=true "Hue per shape, Saturation and Value fall off from centre. (c=1.278)")
+![Example Image](project_images/sample5_sm.png?raw=true "Hue per shape, Saturation and Value fall off from centre. (c=1.278)")
 
-![Example Image](project_images/sample0.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
+![Example Image](project_images/sample0_sm.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
 
-![Example Image](project_images/sample1.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
+![Example Image](project_images/sample1_sm.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
 
-![Example Image](project_images/sample2.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
-
-![Example Image](project_images/sample3.png?raw=true "Hue per shape, Saturation changes over horizontal, Value over vertical.")
-
-![Example Image](project_images/sample4.png?raw=true "Hue changes in radial direction. S/V change linearly.")
+![Example Image](project_images/sample4_sm.png?raw=true "Hue changes in radial direction. S/V change linearly.")
 
