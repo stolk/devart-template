@@ -16,3 +16,8 @@ You can view the output with pretty much any browser.
 Or use Inkscape (http://inkscape.org) which even lets you edit it.
 I use Inkscape to create png files (export as bitmap) by first setting the background alpha to 1.
 
+# License
+
+I grand others the license to use this code, according to the GNU General Public License version 3.
+For the license text, please refer to http://gnu.org/
+
