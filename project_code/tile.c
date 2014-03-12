@@ -310,6 +310,7 @@ static void add_to_buckets( float xo, float yo, int idx )
 }
 
 
+static int numtests=0;
 static int valid_placement( __m256 x8, __m256 y8, __m256 X8, __m256 Y8, float xo, float yo )
 {
 	static float x[8] __attribute__ ((aligned (32)));
@@ -325,6 +326,7 @@ static int valid_placement( __m256 x8, __m256 y8, __m256 X8, __m256 Y8, float xo
 	// consider all currently placed large polygons.
 	for ( int i=0; i<ldbsz; ++i )
 	{
+		numtests++;
 		// any of the points inside a placed polygon? If so, invalid placement.
 		for ( int j=0; j<8; ++j )
 		{
@@ -363,6 +365,7 @@ static int valid_placement( __m256 x8, __m256 y8, __m256 X8, __m256 Y8, float xo
 	const int cnt = bucketsizes[gx][gy];
 	for ( int k=0; k<cnt; ++k )
 	{
+		numtests++;
 		const int i = buckets[gx][gy][k];
 		assert( i < MAXSZ );
 		// any of the points inside a placed polygon? If so, invalid placement.
@@ -375,6 +378,8 @@ static int valid_placement( __m256 x8, __m256 y8, __m256 X8, __m256 Y8, float xo
 		int ei0 = edges_intersect( x8, y8, X8, Y8, sdbx[i], sdby[i], sdbX[i], sdbY[i] );
 		if ( ei0 ) return 0;
 	}
+	if ( cnt < sdbsz )
+		fprintf( stderr, "Considered %d+%d instead of %d shapes.\n", ldbsz, cnt, ldbsz+sdbsz );
 	return 1;
 }
 
@@ -493,15 +498,15 @@ int main( int argc, char* argv[] )
 	fprintf( stdout, "<?xml version=\"1.0\"?>\n" );
 	fprintf( stdout, "<svg version=\"1.1\" baseProfile=\"tiny\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg-root\" viewBox=\"0 0 1 1\">\n" );
 
-	const float c = 1.30;
+	const float c = 1.284;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		//const int shpnr = 3;
-		const int shpnr = i%SHPCNT;
+		const int shpnr = 4;
+		//const int shpnr = i%SHPCNT;
 		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
-		fprintf( stderr, "scl %f\n", scl );
 		int valid = 0;
 		int trials = 0;
+		numtests = 0;
 		do 
 		{
 			const float xo = (rand()&65535)/65535.0f;
@@ -514,7 +519,8 @@ int main( int argc, char* argv[] )
 			__m256 X8 = _mm256_mul_ps( sc8, shpX8[shpnr] );
 			__m256 Y8 = _mm256_mul_ps( sc8, shpY8[shpnr] );
 #if 1
-			const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
+			//const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
+			const float angle = 22.5 * M_PI / 180.0f;
 			rotate_shape( angle, &x8, &y8, &X8, &Y8 );
 #endif
 			x8 = _mm256_add_ps( x8, xo8 );
@@ -544,11 +550,11 @@ int main( int argc, char* argv[] )
 					add_to_buckets( xo, yo, sdbsz );
 					sdbsz++;
 				}
-				fprintf( stderr, "Found placement nr %d (shape %d) in %d trials (trials/shapecount=%f).\n", i, shpnr, trials, trials / (float)(sdbsz+ldbsz) );
+				fprintf( stderr, "Found placement nr %d (shape %d scl %f) in %d trials (trials/shapecount=%f) avg num tests/trial = %d.\n", i, shpnr, scl, trials, trials / (float)(sdbsz+ldbsz), numtests / trials );
 				const float radius = sqrtf( ( yo-0.5 ) * ( yo-0.5 ) + ( xo-0.5 ) * ( xo-0.5 ) );
-				const float h = 150 + shpnr*25.0f;
+				const float h = -log2f( scl ) * 50.0f;
 				const float s = 0.8 - 1.2 * radius;
-				const float v = 0.9 - 1.2 * radius;
+				const float v = 0.8f; //0.9 - 1.2 * radius;
 				float r,g,b;
 				hsv2rgb( h, s, v, &r, &g, &b );
 				static float x[8] __attribute__ ((aligned (32)));
@@ -573,6 +579,7 @@ int main( int argc, char* argv[] )
 		} while ( !valid );
 	}
 
+#if 0
 	for ( int y=1; y<GRIDRES; y++ )
 	{
 		float yc = y / (float) GRIDRES;
@@ -585,6 +592,7 @@ int main( int argc, char* argv[] )
 		fprintf( stdout, "<path d=\"M %f %f L %f %f\" stroke=\"blue\" stroke-width=\"0.001\" />\n",
 			xc, 0.0, xc, 1.0 );
 	}
+#endif
 	fprintf( stdout, "</svg>\n" );
 }
 
