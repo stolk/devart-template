@@ -13,7 +13,7 @@ Randomly tiling a bounded plane with an infinite number of non overlapping shape
 To avoid running out of space one has to shrink each additional shape.
 But how much to shrink them? Shrink too fast, and the space will look empty.
 Shrink them too slow, and you cannot find an empty spot for the next shape.
-It turns out that the area should follow a pow( i, -c ) sequence.
+It turns out that the area size should follow a pow( i, -c ) sequence.
 
 <I>i is the iteration number, and c is a tuned constant larger than 1 and lower than 1.5.</I>
 
