@@ -216,7 +216,7 @@ static float stry[8] __attribute__ ((aligned (32)));
 static float strX[8] __attribute__ ((aligned (32)));
 static float strY[8] __attribute__ ((aligned (32)));
 
-#define SHPCNT 6
+#define SHPCNT 7
 static float shpx[SHPCNT][8] __attribute__ ((aligned(32)));
 static float shpy[SHPCNT][8] __attribute__ ((aligned(32)));
 static float shpX[SHPCNT][8] __attribute__ ((aligned(32)));
@@ -438,18 +438,18 @@ int main( int argc, char* argv[] )
 		const float a0 = i * M_PI / 4;
 		const float a1 = j * M_PI / 4;
 		float r = 0.5f;
-		shpx[4][ i ] = r * cosf( a0 );
-		shpy[4][ i ] = r * sinf( a0 );
+		shpx[5][ i ] = r * cosf( a0 );
+		shpy[5][ i ] = r * sinf( a0 );
 		float r0 = (i&1) ? 0.3f : 0.5f;
 		float r1 = (j&1) ? 0.3f : 0.5f;
-		shpx[5][ i ] = r0 * cosf( a0 );
-		shpy[5][ i ] = r0 * sinf( a0 );
+		shpx[6][ i ] = r0 * cosf( a0 );
+		shpy[6][ i ] = r0 * sinf( a0 );
 	}
 	const float sqrx[8] = { -0.5, -0.5, -0.5, 0, 0.5, 0.5, 0.5, 0 };
 	const float sqry[8] = { 0.5, 0, -0.5, -0.5, -0.5, 0, 0.5, 0.5 };
 	memcpy( shpx[0], sqrx, sizeof(sqrx) );
 	memcpy( shpy[0], sqry, sizeof(sqry) );
-	const float arrx[8] = { -0, 0.4, 0.2, 0.2,     0, -0.2, -0.2, -0.4 };
+	const float arrx[8] = { -0, 0.4, 0.2, 0.2,        0, -0.2, -0.2, -0.4 };
 	const float arry[8] = { -0.6, -0.2, -0.2, 0.6,    0.4, 0.6, -0.2, -0.2 };
 	memcpy( shpx[1], arrx, sizeof(arrx) );
 	memcpy( shpy[1], arry, sizeof(arry) );
@@ -461,6 +461,10 @@ int main( int argc, char* argv[] )
 	const float jtny[8] = { -0.1, -0.1, -0.3, -0.3,   0.1, 0.3, 0.3, 0.1 };
 	memcpy( shpx[3], jtnx, sizeof(jtnx) );
 	memcpy( shpy[3], jtny, sizeof(jtny) );
+	const float bowx[8] = { -0.1, -0.4, -0.4, -0.1,   0.1, 0.4, 0.4, 0.1 };
+	const float bowy[8] = { 0.1, 0.25, -0.25, -0.1,    -0.1, -0.25, 0.25, 0.1 };
+	memcpy( shpx[4], bowx, sizeof(bowx) );
+	memcpy( shpy[4], bowy, sizeof(bowy) );
 
 	for ( int s=0; s<SHPCNT; ++s )
 	{
@@ -511,11 +515,11 @@ int main( int argc, char* argv[] )
 	fprintf( stdout, "<?xml version=\"1.0\"?>\n" );
 	fprintf( stdout, "<svg version=\"1.1\" baseProfile=\"tiny\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg-root\" viewBox=\"0 0 1 1\">\n" );
 
-	const float c = 1.284;
+	const float c = 1.31;//1.284;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		const int shpnr = 4;
-		//const int shpnr = i%SHPCNT;
+		//const int shpnr = 4;
+		const int shpnr = i%SHPCNT;
 		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
 		int valid = 0;
 		int trials = 0;
@@ -532,8 +536,8 @@ int main( int argc, char* argv[] )
 			__m256 X8 = _mm256_mul_ps( sc8, shpX8[shpnr] );
 			__m256 Y8 = _mm256_mul_ps( sc8, shpY8[shpnr] );
 #if 1
-			//const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
-			const float angle = 22.5 * M_PI / 180.0f;
+			const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
+			//const float angle = 22.5 * M_PI / 180.0f;
 			rotate_shape( angle, &x8, &y8, &X8, &Y8 );
 #endif
 			x8 = _mm256_add_ps( x8, xo8 );
@@ -565,9 +569,9 @@ int main( int argc, char* argv[] )
 				}
 				fprintf( stderr, "Found placement nr %d (shape %d scl %f) in %d trials (trials/shapecount=%f) avg num tests/trial = %d.\n", i, shpnr, scl, trials, trials / (float)(sdbsz+ldbsz), numtests / trials );
 				const float radius = sqrtf( ( yo-0.5 ) * ( yo-0.5 ) + ( xo-0.5 ) * ( xo-0.5 ) );
-				const float h = -log2f( scl ) * 50.0f;
-				const float s = 0.8 - 1.2 * radius;
-				const float v = 0.8f; //0.9 - 1.2 * radius;
+				const float h = radius * 400;
+				const float s = 0.9;
+				const float v = 0.8;
 				float r,g,b;
 				hsv2rgb( h, s, v, &r, &g, &b );
 				static float x[8] __attribute__ ((aligned (32)));
