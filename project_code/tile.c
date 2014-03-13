@@ -61,11 +61,23 @@ int winding_number_8( float px, float py, __m256 vx, __m256 vy, __m256 wx, __m25
 
 	__m256i addition = _mm256_blendv_ps( dn_intersect, up_intersect, useup );
 
-	// There should be a faster way to sum over the 8 components of a vector value.
-	int additionvals[ 8 ] __attribute__ ((aligned (32)));
-	 _mm256_store_si256( (__m256i*) additionvals, addition );
-	return additionvals[0] + additionvals[1] + additionvals[2] + additionvals[3] +
-	       additionvals[4] + additionvals[5] + additionvals[6] + additionvals[7];
+#if defined(__AVX2__)
+	const __m256i t1 = _mm256_hadd_epi32( addition, addition );
+	const __m256i t2 = _mm256_hadd_epi32( t1, t1 );
+	const __m128i t3 = _mm256_extracti128_si256( t2, 1 );
+	const __m128i t4 = _mm256_extracti128_si256( t2, 0 );
+	const __m128i t5 = _mm_add_epi32( t3, t4 );
+	return _mm_cvtsi128_si32( t5 );
+#else
+	const __m128i t1 = _mm256_extractf128_si256( addition, 0 );
+	const __m128i t2 = _mm256_extractf128_si256( addition, 1 );
+	const __m128i t3 = _mm_hadd_epi32( t1, t1 );
+	const __m128i t4 = _mm_hadd_epi32( t2, t2 );
+	const __m128i t5 = _mm_hadd_epi32( t3, t3 );
+	const __m128i t6 = _mm_hadd_epi32( t4, t4 );
+	const __m128i t7 = _mm_add_epi32( t5, t6 );
+	return _mm_cvtsi128_si32( t7 );
+#endif
 }
 
 
