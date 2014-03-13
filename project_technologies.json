@@ -7,12 +7,15 @@
             "Linux"
         ],
         "toolkits": [
+            "Clang",
             "SVG"
         ]
     },
     "themes": [
         "infinity",
 	"space",
-	"shapes"
+	"shapes",
+	"polygon",
+	"hue"
     ]
 }
