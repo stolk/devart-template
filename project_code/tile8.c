@@ -92,12 +92,12 @@ int winding_number( float px, float py, float *vx, float* vy, int n )
 		const float ol = onLeft( vx[i], vy[i], vx[j], vy[j], px, py );
 		int pred0 = (vy[j] >  py );
 		int pred1 = (vy[j] <= py );
-		printf("vy[j]=%f py=%f\n", vy[j], py );
-		printf("pred0:%d pred1:%d\n", pred0, pred1);
+		//printf("vy[j]=%f py=%f\n", vy[j], py );
+		//printf("pred0:%d pred1:%d\n", pred0, pred1);
 		const int up_intersect = ( vy[j] >  py && ol > 0.0f ) ?  1 : 0;
 		const int dn_intersect = ( vy[j] <= py && ol < 0.0f ) ? -1 : 0;
 		const int addition = ( vy[i] <= py ) ? up_intersect : dn_intersect;
-		printf( "up:%d dn:%d addition:%d\n", up_intersect, dn_intersect, addition );
+		//printf( "up:%d dn:%d addition:%d\n", up_intersect, dn_intersect, addition );
 		wn += addition;
 	}
 	return wn;
@@ -488,19 +488,21 @@ int main( int argc, char* argv[] )
 		for ( int yy=0; yy<GRIDRES; ++yy )
 			bucketsizes[xx][yy]=0;
 
-#if 0
+#if 1
 	for ( int y=-20; y<=20; ++y )
 	{
 		for ( int x=-20; x<=20; ++x )
 		{
-			//const int rv1 = winding_number( x/36.0f, y/36.0f, strx, stry, 8 );
-			const int rv = winding_number_8( x/36.0f, y/36.0f, strx8, stry8, strX8, strY8 );
-			fprintf( stdout, "%s", (rv==0) ? "--":"[]" );
-			//exit(1);
+			const int rv_scal = winding_number  ( x/36.0f, y/36.0f, shpx[5], shpy[5], 8 );
+			const int rv_vect = winding_number_8( x/36.0f, y/36.0f, shpx8[5], shpy8[5], shpX8[5], shpY8[5] );
+			assert( rv_scal == rv_vect );
+			fprintf( stdout, "%s", (rv_vect==0) ? "--":"[]" );
 		}
 		fprintf( stdout, "\n" );
 	}
 #endif
+
+	exit(1);
 
 #if 0
 	int rv = edge_vs_edge8( 0, 0, 0.3, 0.2, octx8, octy8, octX8, octY8 );
