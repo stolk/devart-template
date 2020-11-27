@@ -393,7 +393,7 @@ static void rotate_shape( float angle, fx16* x, fx16* y, fx16* X, fx16* Y )
 int main( int argc, char* argv[] )
 {
 	srand(23);
-	// init shapes
+	// init shapes 1:sphere, 5: sphere, 6: star
 	for ( int i=0; i<16; ++i )
 	{
 		int j = (i+1)%16;
@@ -406,16 +406,40 @@ int main( int argc, char* argv[] )
 		float r1 = (j&1) ? 0.3f : 0.5f;
 		shpx[6][ i ] = r0 * cosf( a0 );
 		shpy[6][ i ] = r0 * sinf( a0 );
+		shpx[1][ i ] = r * cosf( a0 );
+		shpy[1][ i ] = r * sinf( a0 );
+	}
+	// shape 2: pacman
+	shpx[2][0] = 0;
+	shpy[2][0] = 0;
+	for ( int i=0; i<15; ++i )
+	{
+		const float a0 = (i+2) * M_PI * 2 / 20;
+		float r = 0.5f;
+		shpx[2][i] = r * cosf( a0 );
+		shpy[2][i] = r * sinf( a0 );
+	}
+	// shape 3: ghost
+	if ( 1 )
+	{
+		const float ghox[16] = { -0.5, -0.4, 0.0, 0.4, 0.5, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0, -0.1, -0.2, -0.3, -0.4, -0.5 };
+		const float ghoy[16] = { -0.3, -0.4, -0.5, -0.4, -0.3, 0.5, 0.3, 0.5, 0.3, 0.5, 0.3, 0.5, 0.3, 0.5, 0.3, 0.5 };
+		memcpy( shpx[3], ghox, sizeof(ghox) );
+		memcpy( shpy[3], ghoy, sizeof(ghoy) );
+	}
+	// shape 4: cross
+	if ( 1 )
+	{
+		const float l=0.1f;
+		const float m=0.3f;
+		const float n=1.0f;
+		const float crox[16] = { l, l, m, n, n, m, l, l,-l,-l,-m,-n,-n,-m,-l,-l, };
+		const float croy[16] = {-n,-m,-l,-l, l, l, m, n, n, m, l, l,-l,-l,-m,-n, };
+		memcpy( shpx[4], crox, sizeof(crox) );
+		memcpy( shpy[4], croy, sizeof(croy) );
 	}
 
-#if 0
-	const float sqrx[8] = { -0.5, -0.5, -0.5, 0, 0.5, 0.5, 0.5, 0 };
-	const float sqry[8] = { 0.5, 0, -0.5, -0.5, -0.5, 0, 0.5, 0.5 };
-	memcpy( shpx[0], sqrx, sizeof(sqrx) );
-	memcpy( shpy[0], sqry, sizeof(sqry) );
-#endif
-
-	for ( int s=5; s<=6; ++s )
+	for ( int s=1; s<=6; ++s )
 	{
 		for ( int i=0; i<16; ++i )
 		{
@@ -423,7 +447,6 @@ int main( int argc, char* argv[] )
 			shpX[s][i] = shpx[s][j];
 			shpY[s][i] = shpy[s][j];
 		}
-
 		shpx16[s] = _mm512_load_ps( shpx[s] );
 		shpy16[s] = _mm512_load_ps( shpy[s] );
 		shpX16[s] = _mm512_load_ps( shpX[s] );
@@ -442,8 +465,9 @@ int main( int argc, char* argv[] )
 	{
 		for ( int x=-20; x<=20; ++x )
 		{
-			const int rv_vect = winding_number_16( x/36.0f, y/36.0f, shpx16[5], shpy16[5], shpX16[5], shpY16[5] );
-                        const int rv_scal = winding_number   ( x/36.0f, y/36.0f, shpx[5], shpy[5], 16 );
+			const int s = 4;
+			const int rv_vect = winding_number_16( x/36.0f, y/36.0f, shpx16[s], shpy16[s], shpX16[s], shpY16[s] );
+                        const int rv_scal = winding_number   ( x/36.0f, y/36.0f, shpx[s], shpy[s], 16 );
 			assert( rv_vect == rv_scal );
 			fprintf( stdout, "%s", (rv_vect==0) ? "--":"[]" );
 		}
@@ -467,11 +491,11 @@ int main( int argc, char* argv[] )
 	fprintf( stdout, "<?xml version=\"1.0\"?>\n" );
 	fprintf( stdout, "<svg version=\"1.1\" baseProfile=\"tiny\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg-root\" viewBox=\"0 0 1 1\">\n" );
 
-//	const float c = 1.31;
-	const float c = 1.33;
+//	const float c = 1.31; // for star.
+	const float c = 1.34;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		const int shpnr = 6; // i%SHPCNT;
+		const int shpnr = 1 + rand() % 3;
 		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
 		int valid = 0;
 		int trials = 0;
@@ -526,6 +550,7 @@ int main( int argc, char* argv[] )
 				const float v = 0.8;
 				float r,g,b;
 				hsv2rgb( h, s, v, &r, &g, &b );
+				r=1; g=1; b=0;
 				static float x[16] __attribute__ ((aligned (64)));
 				static float y[16] __attribute__ ((aligned (64)));
 				_mm512_store_ps( x, x16 );
