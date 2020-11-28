@@ -409,6 +409,23 @@ int main( int argc, char* argv[] )
 		shpx[1][ i ] = r * cosf( a0 );
 		shpy[1][ i ] = r * sinf( a0 );
 	}
+
+	// shape 0: arrow
+	if ( 1 )
+	{
+		const float arrx[16] = { 1.0, 0.6, 0.7,-0.7,-0.9,-0.8,-1.0,-0.9,        -0.9,-0.9,-1.0,-0.8,-0.9,-0.7,0.7,0.6, };
+		const float arry[16] = { 0.0, 0.3, 0.1, 0.1, 0.4, 0.1, 0.4, 0.1,         0.0,-0.1,-0.4,-0.1,-0.4,-0.1,-0.1,-0.3, };
+		memcpy( shpx[0], arrx, sizeof(arrx) );
+		memcpy( shpy[0], arry, sizeof(arry) );
+	}
+	// shape 1: heart
+	if ( 1 )
+	{
+		const float heax[16] = { 0.0, -0.2, -0.5, -0.9, -1.0, -0.9, -0.6, -0.2,    0.0, 0.2, 0.6, 0.9, 1.0, 0.9, 0.5, 0.2 };
+		const float heay[16] = { 1.0, 0.5, 0.1, -0.2, -0.7, -0.9, -1.0, -0.9,      -0.6,-0.9,-1.0,-0.9,-0.6,-0.2,0.1, 0.5 };
+		memcpy( shpx[1], heax, sizeof(heax) );
+		memcpy( shpy[1], heay, sizeof(heay) );
+	}
 	// shape 2: pacman
 	shpx[2][0] = 0;
 	shpy[2][0] = 0;
@@ -439,7 +456,7 @@ int main( int argc, char* argv[] )
 		memcpy( shpy[4], croy, sizeof(croy) );
 	}
 
-	for ( int s=1; s<=6; ++s )
+	for ( int s=0; s<=6; ++s )
 	{
 		for ( int i=0; i<16; ++i )
 		{
@@ -461,13 +478,13 @@ int main( int argc, char* argv[] )
 			bucketsizes[xx][yy]=0;
 
 #if 0
-	for ( int y=-20; y<=20; ++y )
+	for ( int y=-32; y<=32; ++y )
 	{
-		for ( int x=-20; x<=20; ++x )
+		for ( int x=-32; x<=32; ++x )
 		{
-			const int s = 4;
-			const int rv_vect = winding_number_16( x/36.0f, y/36.0f, shpx16[s], shpy16[s], shpX16[s], shpY16[s] );
-                        const int rv_scal = winding_number   ( x/36.0f, y/36.0f, shpx[s], shpy[s], 16 );
+			const int s = 0;
+			const int rv_vect = winding_number_16( x/32.0f, y/32.0f, shpx16[s], shpy16[s], shpX16[s], shpY16[s] );
+                        const int rv_scal = winding_number   ( x/32.0f, y/32.0f, shpx[s], shpy[s], 16 );
 			assert( rv_vect == rv_scal );
 			fprintf( stdout, "%s", (rv_vect==0) ? "--":"[]" );
 		}
@@ -495,15 +512,15 @@ int main( int argc, char* argv[] )
 	const float c = 1.34;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		const int shpnr = 1 + rand() % 3;
+		const int shpnr = 0 + rand() % 2;
 		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
 		int valid = 0;
 		int trials = 0;
 		numtests = 0;
 		do 
 		{
-			const float xo = (rand()&65535)/65535.0f;
-			const float yo = (rand()&65535)/65535.0f;
+			const float xo = (rand()&0xffffff)/(float)0xffffff;
+			const float yo = (rand()&0xffffff)/(float)0xffffff;
 			const fx16 xo16 = _mm512_set1_ps( xo  );
 			const fx16 yo16 = _mm512_set1_ps( yo  );
 			const fx16 sc16 = _mm512_set1_ps( scl );
@@ -511,7 +528,7 @@ int main( int argc, char* argv[] )
 			fx16 y16 = sc16 * shpy16[shpnr];
 			fx16 X16 = sc16 * shpX16[shpnr];
 			fx16 Y16 = sc16 * shpY16[shpnr];
-#if 0
+#if 1
 			const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
 			//const float angle = 22.5 * M_PI / 180.0f;
 			rotate_shape( angle, &x16, &y16, &X16, &Y16 );
