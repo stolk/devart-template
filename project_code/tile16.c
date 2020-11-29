@@ -13,6 +13,9 @@
 #include "prt.h"	// for colour space conversions.
 #include "hsv.h"	// for colour space conversions.
 
+
+#include "vdata.h"
+
 typedef float fx16 __attribute__((vector_size(4*16)));	// _mm512  : 16 floats of 32b each.
 typedef int   ix16 __attribute__((vector_size(4*16)));	// _mm512i : 16 integers of 32b each.
 
@@ -410,6 +413,7 @@ int main( int argc, char* argv[] )
 		shpy[1][ i ] = r * sinf( a0 );
 	}
 
+#if 0
 	// shape 0: arrow
 	if ( 1 )
 	{
@@ -444,6 +448,13 @@ int main( int argc, char* argv[] )
 		memcpy( shpx[3], ghox, sizeof(ghox) );
 		memcpy( shpy[3], ghoy, sizeof(ghoy) );
 	}
+#endif
+	for (int i=0; i<4; ++i )
+	{
+		memcpy( shpx[i], vdatax+16*i, 16*sizeof(float) );
+		memcpy( shpy[i], vdatay+16*i, 16*sizeof(float) );
+	}
+
 	// shape 4: cross
 	if ( 1 )
 	{
@@ -482,7 +493,7 @@ int main( int argc, char* argv[] )
 	{
 		for ( int x=-32; x<=32; ++x )
 		{
-			const int s = 0;
+			const int s = 1;
 			const int rv_vect = winding_number_16( x/32.0f, y/32.0f, shpx16[s], shpy16[s], shpX16[s], shpY16[s] );
                         const int rv_scal = winding_number   ( x/32.0f, y/32.0f, shpx[s], shpy[s], 16 );
 			assert( rv_vect == rv_scal );
@@ -509,18 +520,27 @@ int main( int argc, char* argv[] )
 	fprintf( stdout, "<svg version=\"1.1\" baseProfile=\"tiny\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg-root\" viewBox=\"0 0 1 1\">\n" );
 
 //	const float c = 1.31; // for star.
-	const float c = 1.34;
+//	const float c = 1.34;
+	const float c = 1.32;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		const int shpnr = 0 + rand() % 2;
-		const float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
+		const int shpnr = i ? 5 : 3; // 0 + rand() % 4;
+		float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
 		int valid = 0;
 		int trials = 0;
 		numtests = 0;
 		do 
 		{
-			const float xo = (rand()&0xffffff)/(float)0xffffff;
-			const float yo = (rand()&0xffffff)/(float)0xffffff;
+			float xo = (rand()&0xffffff)/(float)0xffffff;
+			float yo = (rand()&0xffffff)/(float)0xffffff;
+
+			if (i==0)
+			{
+				scl = 0.90f;
+				xo = 0.65f;
+				yo = 0.55f;
+			}
+
 			const fx16 xo16 = _mm512_set1_ps( xo  );
 			const fx16 yo16 = _mm512_set1_ps( yo  );
 			const fx16 sc16 = _mm512_set1_ps( scl );
@@ -529,9 +549,12 @@ int main( int argc, char* argv[] )
 			fx16 X16 = sc16 * shpX16[shpnr];
 			fx16 Y16 = sc16 * shpY16[shpnr];
 #if 1
-			const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
-			//const float angle = 22.5 * M_PI / 180.0f;
-			rotate_shape( angle, &x16, &y16, &X16, &Y16 );
+			if ( i>0 )
+			{
+				const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
+				//const float angle = 22.5 * M_PI / 180.0f;
+				rotate_shape( angle, &x16, &y16, &X16, &Y16 );
+			}
 #endif
 			x16 = x16 + xo16;
 			y16 = y16 + yo16;
