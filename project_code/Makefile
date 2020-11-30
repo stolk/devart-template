@@ -5,6 +5,9 @@ CFLAGS=\
 	-O3 \
 	-march=skylake-avx512
 
+runamzn: tileamzn
+	./tileamzn > amzn.svg
+
 runfb: tilefb
 	./tilefb > fb.svg
 	inkscape --export-png=fb.png --export-width=1280 fb.svg
@@ -29,4 +32,6 @@ tile16: tile16.o
 tilefb: tilefb.o
 	$(CC) -o tilefb tilefb.o -lm
 
+tileamzn: tileamzn.o
+	$(CC) -o tileamzn tileamzn.o -lm
 

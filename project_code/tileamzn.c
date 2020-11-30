@@ -192,18 +192,20 @@ static fx16  shpX16[SHPCNT];
 static fx16  shpY16[SHPCNT];
 static float shparea[SHPCNT];
 
-#define MAXSZ 1600
+//#define MAXSZ 1600
+#define MAXSZ 800
+
 // db for large polies
-static fx16 ldbx[MAXSZ];
-static fx16 ldby[MAXSZ];
-static fx16 ldbX[MAXSZ];
-static fx16 ldbY[MAXSZ];
+static fx16 ldbx[2*MAXSZ];
+static fx16 ldby[2*MAXSZ];
+static fx16 ldbX[2*MAXSZ];
+static fx16 ldbY[2*MAXSZ];
 static int ldbsz=0;
 // db for small polies (which we bin in grid buckets for fast spatial lookup.)
-static fx16 sdbx[MAXSZ];
-static fx16 sdby[MAXSZ];
-static fx16 sdbX[MAXSZ];
-static fx16 sdbY[MAXSZ];
+static fx16 sdbx[2*MAXSZ];
+static fx16 sdby[2*MAXSZ];
+static fx16 sdbX[2*MAXSZ];
+static fx16 sdbY[2*MAXSZ];
 static int sdbsz=0;
 
 //Spatial indexing
@@ -300,6 +302,12 @@ static int valid_placement( fx16 x16, fx16 y16, fx16 X16, fx16 Y16, float xo, fl
 	_mm512_store_ps( X, X16 );
 	_mm512_store_ps( Y, Y16 );
 
+	for ( int j=0; j<16; ++j )
+	{
+		if (x[j]<0 ||x[j]>1) return 0;
+		if (y[j]<0 ||y[j]>1) return 0;
+	}
+
 	// consider all currently placed large polygons.
 	for ( int i=0; i<ldbsz; ++i )
 	{
@@ -344,7 +352,7 @@ static int valid_placement( fx16 x16, fx16 y16, fx16 X16, fx16 Y16, float xo, fl
 	{
 		numtests++;
 		const int i = buckets[gx][gy][k];
-		assert( i < MAXSZ );
+		assert( i < 2*MAXSZ );
 		// any of the points inside a placed polygon? If so, invalid placement.
 		for ( int j=0; j<16; ++j )
 		{
@@ -493,7 +501,7 @@ int main( int argc, char* argv[] )
 	{
 		for ( int x=-32; x<=32; ++x )
 		{
-			const int s = 1;
+			const int s = 0;
 			const int rv_vect = winding_number_16( x/32.0f, y/32.0f, shpx16[s], shpy16[s], shpX16[s], shpY16[s] );
                         const int rv_scal = winding_number   ( x/32.0f, y/32.0f, shpx[s], shpy[s], 16 );
 			assert( rv_vect == rv_scal );
@@ -521,12 +529,15 @@ int main( int argc, char* argv[] )
 
 //	const float c = 1.31; // for star.
 //	const float c = 1.34;
-	const float c = 1.34;
+	const float c = 1.53;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
-		const int shpnr = i ? 5 : 3; // 0 + rand() % 4;
-		float scl = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr]) );
-		int valid = 0;
+		int shpnr0 = 0;
+		int shpnr1 = 1;
+		float scl0 = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr0]) );
+		float scl1 = sqrtf( powf( 5+i, -c ) / (2*shparea[shpnr1]) );
+		int valid0 = 0;
+		int valid1 = 0;
 		int trials = 0;
 		numtests = 0;
 		do 
@@ -534,67 +545,112 @@ int main( int argc, char* argv[] )
 			float xo = (rand()&0xffffff)/(float)0xffffff;
 			float yo = (rand()&0xffffff)/(float)0xffffff;
 
+#if 1
 			if (i==0)
 			{
-				scl = 0.90f;
-				xo = 0.65f;
-				yo = 0.55f;
+				scl0 = scl1 = 0.70f;
+				xo = 0.50f;
+				yo = 0.50f;
+				shpnr0 = shpnr1 = 2;
 			}
+#endif
 
 			const fx16 xo16 = _mm512_set1_ps( xo  );
 			const fx16 yo16 = _mm512_set1_ps( yo  );
-			const fx16 sc16 = _mm512_set1_ps( scl );
-			fx16 x16 = sc16 * shpx16[shpnr];
-			fx16 y16 = sc16 * shpy16[shpnr];
-			fx16 X16 = sc16 * shpX16[shpnr];
-			fx16 Y16 = sc16 * shpY16[shpnr];
-#if 0
+			const fx16 sc16a= _mm512_set1_ps( scl0 );
+			const fx16 sc16b= _mm512_set1_ps( scl1 );
+			fx16 x16a = sc16a * shpx16[shpnr0];
+			fx16 y16a = sc16a * shpy16[shpnr0];
+			fx16 X16a = sc16a * shpX16[shpnr0];
+			fx16 Y16a = sc16a * shpY16[shpnr0];
+			fx16 x16b = sc16b * shpx16[shpnr1];
+			fx16 y16b = sc16b * shpy16[shpnr1];
+			fx16 X16b = sc16b * shpX16[shpnr1];
+			fx16 Y16b = sc16b * shpY16[shpnr1];
+#if 1
 			if ( i>0 )
 			{
 				const float angle = (rand()&65535) / 65535.0f * 2.0f * M_PI;
 				//const float angle = 22.5 * M_PI / 180.0f;
-				rotate_shape( angle, &x16, &y16, &X16, &Y16 );
+				rotate_shape( angle, &x16a, &y16a, &X16a, &Y16a );
+				rotate_shape( angle, &x16b, &y16b, &X16b, &Y16b );
 			}
 #endif
-			x16 = x16 + xo16;
-			y16 = y16 + yo16;
-			X16 = X16 + xo16;
-			Y16 = Y16 + yo16;
-			valid = valid_placement( x16, y16, X16, Y16, xo, yo );
+			x16a = x16a + xo16;
+			y16a = y16a + yo16;
+			X16a = X16a + xo16;
+			Y16a = Y16a + yo16;
+			x16b = x16b + xo16;
+			y16b = y16b + yo16;
+			X16b = X16b + xo16;
+			Y16b = Y16b + yo16;
+			valid0 = valid_placement( x16a, y16a, X16a, Y16a, xo, yo );
+			if ( valid0 )
+				valid1 = valid_placement( x16b, y16b, X16b, Y16b, xo, yo );
 			trials++;
-			if ( valid )
+			if ( valid0 && valid1 )
 			{
 				// add to grid buckets
-				if ( scl >= CRITICALSCALE )
+				if ( scl0 >= CRITICALSCALE )
 				{
 					// add to db
-					ldbx[ldbsz] = x16;
-					ldby[ldbsz] = y16;
-					ldbX[ldbsz] = X16;
-					ldbY[ldbsz] = Y16;
+					ldbx[ldbsz] = x16a;
+					ldby[ldbsz] = y16a;
+					ldbX[ldbsz] = X16a;
+					ldbY[ldbsz] = Y16a;
+					ldbsz++;
+					ldbx[ldbsz] = x16b;
+					ldby[ldbsz] = y16b;
+					ldbX[ldbsz] = X16b;
+					ldbY[ldbsz] = Y16b;
 					ldbsz++;
 				}
 				else
 				{
-					sdbx[sdbsz] = x16;
-					sdby[sdbsz] = y16;
-					sdbX[sdbsz] = X16;
-					sdbY[sdbsz] = Y16;
+					sdbx[sdbsz] = x16a;
+					sdby[sdbsz] = y16a;
+					sdbX[sdbsz] = X16a;
+					sdbY[sdbsz] = Y16a;
+					add_to_buckets( xo, yo, sdbsz );
+					sdbsz++;
+					sdbx[sdbsz] = x16b;
+					sdby[sdbsz] = y16b;
+					sdbX[sdbsz] = X16b;
+					sdbY[sdbsz] = Y16b;
 					add_to_buckets( xo, yo, sdbsz );
 					sdbsz++;
 				}
-				fprintf( stderr, "Found placement nr %d (shape %d scl %f) in %d trials (trials/shapecount=%f) avg num tests/trial = %d.\n", i, shpnr, scl, trials, trials / (float)(sdbsz+ldbsz), numtests / trials );
-				const float radius = sqrtf( ( yo-0.5 ) * ( yo-0.5 ) + ( xo-0.5 ) * ( xo-0.5 ) );
-				const float h = radius * 400;
-				const float s = 0.9;
-				const float v = 0.8;
-				float r,g,b;
-				hsv2rgb( h, s, v, &r, &g, &b );
-				r=1; g=1; b=0;
+				fprintf( stderr, "Found placement nr %d (shape %d scl %f) in %d trials (trials/shapecount=%f) avg num tests/trial = %d.\n", i, shpnr0, scl0, trials, trials / (float)(sdbsz+ldbsz), numtests / trials );
+				if ( i )
+				{
+				float r=0.02, g=0.32, b=0.02;
 				static float x[16] __attribute__ ((aligned (64)));
 				static float y[16] __attribute__ ((aligned (64)));
-				_mm512_store_ps( x, x16 );
-				_mm512_store_ps( y, y16 );
+				_mm512_store_ps( x, x16a );
+				_mm512_store_ps( y, y16a );
+				fprintf( stdout, "<path d=\"M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f  L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f  Z\" fill=\"#%02x%02x%02x\" />\n",
+					x[0], y[0],
+					x[1], y[1],
+					x[2], y[2],
+					x[3], y[3],
+					x[4], y[4],
+					x[5], y[5],
+					x[6], y[6],
+					x[7], y[7],
+					x[8], y[8],
+					x[9], y[9],
+					x[10], y[10],
+					x[11], y[11],
+					x[12], y[12],
+					x[13], y[13],
+					x[14], y[14],
+					x[15], y[15],
+					(int) (r*255.999f),
+					(int) (g*255.999f),
+					(int) (b*255.999f)
+				);
+				_mm512_store_ps( x, x16b );
+				_mm512_store_ps( y, y16b );
 				fprintf( stdout, "<path d=\"M %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f  L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f L %f %f  Z\" fill=\"#%02x%02x%02x\" />\n",
 					x[0], y[0],
 					x[1], y[1],
@@ -617,8 +673,9 @@ int main( int argc, char* argv[] )
 					(int) (b*255.999f)
 				);
 				fflush(stdout);
+				}
 			}
-		} while ( !valid );
+		} while ( !valid0 || !valid1 );
 	}
 
 #if 0

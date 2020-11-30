@@ -480,13 +480,16 @@ int main( int argc, char* argv[] )
 #if 1
 
 	fprintf( stdout, "<?xml version=\"1.0\"?>\n" );
+	fprintf( stdout, "<!-- title: \"Eyed\" -->\n" );
+	fprintf( stdout, "<!-- artist: Abraham Stolk. -->\n" );
+	fprintf( stdout, "<!-- Copyright 2020. -->\n" );
 	fprintf( stdout, "<svg version=\"1.1\" baseProfile=\"tiny\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg-root\" viewBox=\"0 0 1 1\">\n" );
 
 	fwrite( snippet, snippetsz, 1, stdout );
 
 //	const float c = 1.31; // for star.
 //	const float c = 1.34;
-	const float c = 1.34;
+	const float c = 1.355;
 	for ( int i=0; i<MAXSZ; ++i )
 	{
 		const int shpnr = i ? 5 : 3; // 0 + rand() % 4;
@@ -498,6 +501,9 @@ int main( int argc, char* argv[] )
 		{
 			float xo = (rand()&0xffffff)/(float)0xffffff;
 			float yo = (rand()&0xffffff)/(float)0xffffff;
+
+			if (xo < scl || xo > 1-scl) continue;
+			if (yo < scl || yo > 1-scl) continue;
 
 			if (i==0)
 			{
@@ -562,7 +568,11 @@ int main( int argc, char* argv[] )
 				_mm512_store_ps( y, y16 );
 				if (i)
 				{
-					fprintf( stdout, "<use xlink:href=\"#eye\" id=\"use%04d\" transform=\"matrix(%f,0,0,%f,%f,%f)\" />\n", i, 0.52*scl, 0.52*scl, xo, yo );
+					const float eyescl = 0.52 * scl;
+					fprintf( stdout, "<use xlink:href=\"#openeye\" id=\"useopen%04d\" transform=\"matrix(%f,0,0,%f,%f,%f)\" />\n", i, eyescl, eyescl, xo, yo );
+					//fprintf( stdout, "<use xlink:href=\"#closeye\" id=\"useclos%04d\" transform=\"matrix(%f,0,0,%f,%f,%f)\" visibility=\"visible\" >\n", i, eyescl, eyescl, xo, yo );
+					//fprintf( stdout, "\t<set attributeName=\"visibility\" to=\"hidden\" begin=\"%fs\" dur=\"1200s\" />\n", (rand()&0xffff) / (float)0x0fff );
+					//fprintf( stdout, "</use>\n" );
 					fflush(stdout);
 				}
 			}
