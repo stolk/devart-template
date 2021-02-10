@@ -5,6 +5,12 @@ CFLAGS=\
 	-O3 \
 	-march=skylake-avx512
 
+
+runblobs: tileblobs
+	./tileblobs > blobs.svg
+	inkscape --export-png=blobs.png --export-width=1280 blobs.svg
+	-display blobs.png
+
 runamzn: tileamzn
 	./tileamzn > amzn.svg
 
@@ -34,4 +40,7 @@ tilefb: tilefb.o
 
 tileamzn: tileamzn.o
 	$(CC) -o tileamzn tileamzn.o -lm
+
+tileblobs: tileblobs.o
+	$(CC) -o tileblobs tileblobs.o -lm
 
